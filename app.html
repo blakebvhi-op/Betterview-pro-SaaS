@@ -77,6 +77,32 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 /* ── APP BODY ── */
 .abody{position:fixed;top:var(--hh);bottom:var(--bnh);left:0;right:0;overflow:hidden;}
 .view{display:none;height:100%;overflow:hidden;}
+/* ── Dashboard ── */
+#vDash.active{display:block;overflow-y:auto;}
+.dash-wrap{max-width:1200px;margin:0 auto;padding:20px 24px 40px;}
+.dash-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.dash-greeting{font-size:22px;font-weight:700;color:var(--white);}
+.dash-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+.dash-customize{background:var(--steel-mid);border:1px solid var(--iron);color:var(--navy);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+.dash-customize:hover{border-color:var(--amber);}
+.dash-customize-panel{background:var(--steel-mid);border:1px solid var(--iron);border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.dash-cp-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:10px;}
+.dash-cp-row{display:flex;flex-wrap:wrap;gap:8px;}
+.dash-cp-toggle{border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--iron);background:var(--steel-mid);color:var(--muted);}
+.dash-cp-toggle.on{border-color:var(--amber);background:rgba(16,168,176,.1);color:var(--amber-dim);}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;}
+.dash-card{background:var(--steel-mid);border:1px solid var(--iron);border-radius:12px;padding:16px 18px;}
+.dash-card-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.dash-card-title{font-size:14px;font-weight:700;color:var(--white);}
+.dash-card-icon{font-size:16px;}
+.dash-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--steel-light);}
+.dash-row:last-child{border-bottom:none;}
+.dash-empty{font-size:13px;color:var(--muted);padding:10px 0;text-align:center;}
+.dash-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;}
+.dash-money-row{display:flex;gap:10px;margin-bottom:10px;}
+.dash-money-box{flex:1;background:var(--steel-light);border-radius:8px;padding:10px 12px;}
+.dash-money-label{font-size:11px;color:var(--muted);}
+.dash-money-val{font-size:20px;font-weight:700;color:var(--white);margin-top:2px;}
 .view.active{display:flex;flex-direction:column;}
 .fab{position:fixed;right:14px;bottom:calc(var(--bnh) + 12px);width:50px;height:50px;background:var(--amber);color:var(--steel);border:none;border-radius:50%;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(245,158,11,.5);cursor:pointer;z-index:40;transition:transform .15s;}
 .fab:active{transform:scale(.92);}
@@ -1194,7 +1220,7 @@ select.doc-finput option{background:var(--steel-mid);}
 .user-badge{display:flex;align-items:center;gap:6px;background:var(--steel-light);border:1px solid var(--iron);border-radius:20px;padding:3px 10px 3px 4px;cursor:pointer;transition:border-color .15s;position:relative;}
 .user-badge:hover{border-color:var(--amber);}
 .user-avatar{width:24px;height:24px;border-radius:50%;background:var(--amber);color:var(--steel);font-family:'Bebas Neue',sans-serif;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.role-badge{display:inline-block;padding:1px 6px;margin-left:6px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:1.2px;color:#1a1e2e;font-weight:700;}
+.role-badge{display:inline-block;padding:1px 6px;margin-left:6px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:1.2px;color:#ffffff;font-weight:700;}
 
 /* Role-based hide rules.
    Body gets one of: role-owner, role-manager, role-salesman, role-laborer, role-none.
@@ -1342,7 +1368,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div class="sync-dot" id="syncDot"></div>
     <span class="sync-lbl" id="syncLbl" onclick="manualResync()" title="Tap to resync"></span>
     <div class="dtabs" id="dtabs">
-      <button class="dtab active" id="dtSched" onclick="switchMain('sched')">📅 SCHEDULE <span class="dbadge" id="dtBlBadge">0</span></button>
+      <button class="dtab active" id="dtDash" onclick="switchMain('dash')">🏠 DASHBOARD</button>
+      <button class="dtab" id="dtSched" onclick="switchMain('sched')">📅 SCHEDULE <span class="dbadge" id="dtBlBadge">0</span></button>
       <button class="dtab" id="dtCRM" onclick="switchMain('crm')">👥 CUSTOMERS <span class="dbadge" id="dtCrmBadge">0</span></button>
       <button class="dtab" id="dtMsg" onclick="switchMain('msg')">💬 MESSAGES <span class="dbadge" id="dtMsgBadge">0</span></button>
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
@@ -1357,7 +1384,10 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 </header>
 
 <div class="bnav">
-  <button class="bnbtn active" id="bnSched" onclick="switchMain('sched')">
+  <button class="bnbtn active" id="bnDash" onclick="switchMain('dash')">
+    <div class="bnicon">🏠</div><div class="bnlbl">HOME</div>
+  </button>
+  <button class="bnbtn" id="bnSched" onclick="switchMain('sched')">
     <div class="bnicon">📅</div><div class="bnlbl">SCHEDULE</div>
     <div class="bnbadge" id="bnBlBadge"></div>
   </button>
@@ -1386,7 +1416,24 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 <div class="abody">
 
   <!-- ═══ SCHEDULER ═══ -->
-  <div class="view active" id="vSched">
+  <div class="view active" id="vDash">
+    <div class="dash-wrap" id="dashWrap">
+      <div class="dash-head">
+        <div>
+          <div class="dash-greeting" id="dashGreeting">Dashboard</div>
+          <div class="dash-sub" id="dashSub"></div>
+        </div>
+        <button class="dash-customize" id="dashCustomizeBtn" onclick="toggleDashCustomize()">⚙ Customize</button>
+      </div>
+      <div class="dash-customize-panel" id="dashCustomizePanel" style="display:none;">
+        <div class="dash-cp-title">Show widgets</div>
+        <div class="dash-cp-row" id="dashToggleRow"></div>
+      </div>
+      <div class="dash-grid" id="dashGrid"></div>
+    </div>
+  </div>
+
+  <div class="view" id="vSched">
 
     <!-- DESKTOP: merged control row (nav + view pills) — hidden on mobile via CSS -->
     <div class="dtopbar" style="display:none" id="dtopbar">
@@ -4233,7 +4280,7 @@ function setLeadAssigned(t){
   if(typeof renderCRM==='function') renderCRM();
 }
 let selColor='amber',editJobId=null,editLeadId=null,leadColor='blue',modalDay='backlog';
-let dragJobId=null,mainView='sched';
+let dragJobId=null,mainView='dash';
 let openDayKey=null;
 const ghost=document.getElementById('dragGhost');
 const isMobile=()=>window.innerWidth<768;
@@ -4979,7 +5026,7 @@ async function loadAppData(){
     try{startDocPolling();}catch(e){console.error('polling start failed:',e);}
   }).catch(()=>{});
   applyLayout();
-  switchMain('sched');
+  switchMain('dash');
   if(calView==='week')fetchWeather();
   renderAssigneeFilters();
   initResizers();
@@ -4997,11 +5044,11 @@ function switchMain(v){
   }
   mainView=v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg'};
+  const viewMap={dash:'vDash',sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg'};
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
-  ['bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
-  ['dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Column',msg:'↻ Refresh'};
+  ['bnDash','bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
+  ['dtDash','dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
+  const lblMap={dash:'New Job',sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Column',msg:'↻ Refresh'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='sched'?()=>openJobMov('backlog'):
@@ -5011,7 +5058,8 @@ function switchMain(v){
     v==='pipe'?()=>openPipeColDialog():
     v==='msg'?()=>renderMsgInbox():
     ()=>document.getElementById('matSearch')?.focus();
-  if(v==='crm')renderCustomers();
+  if(v==='dash')renderDashboard();
+  else if(v==='crm')renderCustomers();
   else if(v==='sched')renderSched();
   else if(v==='est')renderDocList();
   else if(v==='tasks'){renderTaskList();filterTasks(taskFilter);}
@@ -5061,6 +5109,129 @@ function setCalView(v){
 }
 
 // ── RENDER SCHEDULER ─────────────────────────────────────────
+// ════════════════ DASHBOARD (Step 3) ════════════════
+// Owner command center. A lens over existing data — no new data model.
+// Widgets in priority order: Schedule → Leads/Messages → Crew → Money.
+// "Customize" = pick which widgets show (saved to localStorage prefs).
+const DASH_WIDGETS=[
+  {key:'schedule',title:"Today's Schedule",icon:'📅'},
+  {key:'leads',   title:'New Leads & Messages',icon:'📥'},
+  {key:'crew',    title:'Crew Status',icon:'👷'},
+  {key:'money',   title:'Money',icon:'💰'},
+];
+function dashPrefs(){
+  try{const s=localStorage.getItem('dash_widgets');if(s)return JSON.parse(s);}catch{}
+  return {schedule:true,leads:true,crew:true,money:true};
+}
+function saveDashPrefs(p){try{localStorage.setItem('dash_widgets',JSON.stringify(p));}catch{}}
+function toggleDashCustomize(){
+  const p=document.getElementById('dashCustomizePanel');
+  if(p)p.style.display=p.style.display==='none'?'block':'none';
+}
+function toggleDashWidget(key){
+  const p=dashPrefs(); p[key]=!p[key]; saveDashPrefs(p); renderDashboard();
+}
+function _todayKey(){return new Date().toISOString().slice(0,10);}
+function renderDashboard(){
+  // Greeting + date
+  const g=document.getElementById('dashGreeting'), sub=document.getElementById('dashSub');
+  if(g){const h=new Date().getHours();const part=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+    const nm=(currentDisplayName||'').split(' ')[0]||'';g.textContent=nm?`${part}, ${nm}`:'Dashboard';}
+  if(sub){sub.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});}
+  // Toggle chips
+  const row=document.getElementById('dashToggleRow'); const prefs=dashPrefs();
+  if(row){row.innerHTML=DASH_WIDGETS.map(w=>
+    `<button class="dash-cp-toggle ${prefs[w.key]?'on':''}" onclick="toggleDashWidget('${w.key}')">${prefs[w.key]?'✓ ':'+ '}${w.title}</button>`
+  ).join('');}
+  // Grid
+  const grid=document.getElementById('dashGrid'); if(!grid)return;
+  let html='';
+  if(prefs.schedule)html+=dashWidgetSchedule();
+  if(prefs.leads)   html+=dashWidgetLeads();
+  if(prefs.crew)    html+=dashWidgetCrew();
+  if(prefs.money)   html+=dashWidgetMoney();
+  grid.innerHTML=html||'<div class="dash-empty">All widgets hidden. Click Customize to show some.</div>';
+  dashLoadAsync(); // fill parts that need a fetch (crew, unread count)
+}
+function dashCard(icon,title,inner){
+  return `<div class="dash-card"><div class="dash-card-head"><span class="dash-card-icon">${icon}</span><span class="dash-card-title">${esc(title)}</span></div>${inner}</div>`;
+}
+function dashWidgetSchedule(){
+  const tk=_todayKey();
+  const today=(typeof jobs!=='undefined'?jobs:[]).filter(j=>j.day===tk)
+    .sort((a,b)=>String(a.startTime||'').localeCompare(String(b.startTime||'')));
+  let inner;
+  if(!today.length){inner='<div class="dash-empty">Nothing scheduled today.</div>';}
+  else{inner=today.slice(0,6).map(j=>{
+    const t=j.startTime?fmtTime(j.startTime):'';
+    const nm=esc(j.title||j.customerName||j.map||'Job');
+    return `<div class="dash-row"><div style="width:5px;height:32px;border-radius:3px;background:${esc(j.color||'#10a8b0')};"></div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--white);">${nm}</div>
+      <div style="font-size:11px;color:var(--muted);">${t||'—'}</div></div></div>`;}).join('');}
+  return dashCard('📅',"Today's Schedule",inner);
+}
+function dashWidgetLeads(){
+  // Recent leads (client-side data already loaded). Unread count filled async.
+  const recent=(typeof leads!=='undefined'?leads:[]).slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))).slice(0,4);
+  let inner='';
+  if(!recent.length){inner='<div class="dash-empty">No leads yet.</div>';}
+  else{inner=recent.map(l=>{
+    const nm=esc(l.name||'Lead'); const init=(l.name||'?').trim().slice(0,2).toUpperCase();
+    return `<div class="dash-row"><div style="width:30px;height:30px;border-radius:50%;background:rgba(16,168,176,.12);color:var(--amber-dim);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">${esc(init)}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--white);">${nm}</div>
+      <div style="font-size:11px;color:var(--muted);">${esc(l.phone||l.contact||'')}</div></div></div>`;}).join('');}
+  inner+='<div id="dashUnread" style="font-size:11px;color:var(--amber-dim);font-weight:600;margin-top:8px;"></div>';
+  return dashCard('📥','New Leads & Messages',inner);
+}
+function dashWidgetCrew(){
+  return dashCard('👷','Crew Status','<div id="dashCrewBody"><div class="dash-empty">Loading…</div></div>');
+}
+function dashWidgetMoney(){
+  const ds=(typeof docs!=='undefined'?docs:[]);
+  const calc=(typeof calcDocTotal==='function')?calcDocTotal:(()=>0);
+  let out=0,toInvoice=0,outCount=0,invCount=0;
+  ds.forEach(d=>{
+    const t=Number(calc(d))||0;
+    if(d.status==='sent'||d.status==='pending'){out+=t;outCount++;}
+    if(d.status==='signed'){toInvoice+=t;invCount++;}
+  });
+  const money=n=>'$'+Math.round(n).toLocaleString();
+  const inner=`<div class="dash-money-row">
+    <div class="dash-money-box"><div class="dash-money-label">Estimates out</div><div class="dash-money-val">${money(out)}</div></div>
+    <div class="dash-money-box"><div class="dash-money-label">To invoice</div><div class="dash-money-val" style="color:var(--green);">${money(toInvoice)}</div></div>
+  </div><div style="font-size:11px;color:var(--muted);">${outCount} awaiting signature · ${invCount} ready to bill</div>`;
+  return dashCard('💰','Money',inner);
+}
+async function dashLoadAsync(){
+  // Crew: who's clocked in company-wide (owner view). Unread messages count.
+  try{
+    if(dashPrefs().crew && currentCompanyId && authAccessToken){
+      const r=await fetch(SB_URL+'/rest/v1/time_entries?company_id=eq.'+encodeURIComponent(currentCompanyId)+'&clock_out=is.null&select=user_id,clock_in',
+        {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken}});
+      const body=document.getElementById('dashCrewBody');
+      if(r.ok&&body){
+        const rows=await r.json();
+        if(!rows.length){body.innerHTML='<div class="dash-empty">No one clocked in.</div>';}
+        else{body.innerHTML=rows.map(e=>{
+          const who=(typeof teamRoster!=='undefined'&&teamRoster.find?teamRoster.find(m=>m.id===e.user_id):null);
+          const nm=who?esc(who.name||'Crew'):'Crew';
+          const t=e.clock_in?fmtTime(new Date(e.clock_in).toTimeString().slice(0,5)):'';
+          return `<div class="dash-row"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>
+            <div style="flex:1;font-size:13px;color:var(--white);">${nm}</div>
+            <div style="font-size:11px;color:var(--muted);">in ${t}</div></div>`;}).join('');}
+      }
+    }
+  }catch(e){console.error('dash crew load:',e);}
+  try{
+    if(dashPrefs().leads && currentCompanyId && authAccessToken){
+      const r=await fetch(SB_URL+'/rest/v1/portal_messages?sender=eq.customer&read_by_staff=eq.false&select=id',
+        {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken,'Prefer':'count=exact'}});
+      const el=document.getElementById('dashUnread');
+      if(r.ok&&el){const rows=await r.json();const n=rows.length;el.textContent=n?`${n} unread message${n>1?'s':''}`:'';}
+    }
+  }catch(e){console.error('dash unread load:',e);}
+}
+
 function renderSched(){
   if(calView==='week') renderWeek();
   else if(calView==='month') renderMonth();
