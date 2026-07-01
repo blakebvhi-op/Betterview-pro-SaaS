@@ -4845,6 +4845,19 @@ async function loadCustomersRemote(){
   try{customers=await sb.get('customers');return true;}
   catch(e){console.error('loadCustomersRemote:',e);return false;}
 }
+// FIX: loadDocsRemote was called in 3 places (initial load, signed-estimate
+// polling, refresh) but never defined — those calls threw ReferenceError,
+// so server doc-refresh (and signed-estimate detection) silently failed.
+// Defined here to match the sibling *Remote loaders. Maps rows with dbToDoc,
+// same as loadAllRemote does.
+async function loadDocsRemote(){
+  try{
+    const d=await sb.get('docs');
+    docs=d.map(dbToDoc);
+    try{lsSet('docs_cache',docs.map(docToDb));}catch{}
+    return true;
+  }catch(e){console.error('loadDocsRemote:',e);return false;}
+}
 async function loadCustomerAddressesRemote(){
   try{customerAddresses=await sb.get('customer_addresses');return true;}
   catch(e){console.error('loadCustomerAddressesRemote:',e);return false;}
