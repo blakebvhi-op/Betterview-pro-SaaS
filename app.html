@@ -21,11 +21,23 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap"></noscript>
 <style>
 :root{
-  --steel:#1a1e2e;--steel-mid:#252b3d;--steel-light:#2f3650;--iron:#3b4466;
-  --amber:#f59e0b;--amber-bright:#fbbf24;--amber-dim:#d97706;
-  --white:#f1f5f9;--muted:#94a3b8;--danger:#ef4444;
-  --green:#22c55e;--blue:#3b82f6;--purple:#a855f7;
-  --pink:#ec4899;--teal:#14b8a6;--orange:#f97316;
+  /* ── BetterView Pro light theme — matches the login screen ──
+     Backgrounds go light, text goes dark navy, accent is brand teal.
+     The variable names are kept (--steel, --amber, etc.) so the 185+
+     existing var() references pick up the new palette automatically. */
+  --steel:#f1f5f9;        /* page background (was dark) → slate-100 */
+  --steel-mid:#ffffff;    /* card / surface → white */
+  --steel-light:#f8fafc;  /* subtle / hover surface */
+  --iron:#e2e8f0;         /* borders → slate-200 */
+  --amber:#10a8b0;        /* PRIMARY ACCENT → brand teal (was orange) */
+  --amber-bright:#0891a0; /* accent hover (slightly deeper teal) */
+  --amber-dim:#0e7490;    /* accent pressed */
+  --white:#0f172a;        /* PRIMARY TEXT → near-black navy (was near-white) */
+  --muted:#64748b;        /* secondary text → slate-500 */
+  --danger:#dc2626;
+  --green:#16a34a;--blue:#2563eb;--purple:#9333ea;
+  --pink:#db2777;--teal:#10a8b0;--orange:#ea580c;
+  --navy:#082850;         /* brand navy for headers / primary buttons */
   --hh:56px;--bnh:60px;
   --app-font:'DM Sans',sans-serif;
   --display-font:'Bebas Neue',sans-serif;
@@ -332,7 +344,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 
 /* Linked Work Order card on the job modal */
 .linked-wo-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.4);border-radius:8px;cursor:pointer;transition:all .12s;}
-.linked-wo-card:hover{background:rgba(245,158,11,.14);border-color:#f59e0b;}
+.linked-wo-card:hover{background:rgba(16,168,176,.14);border-color:#10a8b0;}
 .linked-mo-card{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.4);}
 .linked-mo-card:hover{background:rgba(34,197,94,.14);border-color:#22c55e;}
 .linked-mo-card .linked-wo-arrow{color:#22c55e;}
@@ -697,7 +709,7 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .lh-company-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:#1a1e2e;line-height:1;}
 .lh-company-tag{font-size:10px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
 .lh-doc-info{text-align:right;}
-.lh-doc-type{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#f59e0b;}
+.lh-doc-type{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#082850;}
 .lh-doc-num{font-size:11px;color:#64748b;margin-top:2px;}
 .lh-doc-date{font-size:11px;color:#64748b;}
 .lh-parties{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
@@ -1083,7 +1095,7 @@ select.doc-finput option{background:var(--steel-mid);}
 .wo-doc-co-tag{font-size:9px;color:#64748b;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
 .wo-doc-co-meta{font-size:10px;color:#64748b;margin-top:4px;line-height:1.5;}
 .wo-doc-info{text-align:right;}
-.wo-doc-type{font-size:18px;font-weight:800;letter-spacing:3px;color:#f59e0b;text-transform:uppercase;}
+.wo-doc-type{font-size:18px;font-weight:800;letter-spacing:3px;color:#082850;text-transform:uppercase;}
 .wo-doc-num{font-size:11px;color:#64748b;margin-top:2px;}
 .wo-doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
 .wo-doc-cell{background:#f8fafc;border-radius:6px;padding:10px 12px;}
@@ -1092,7 +1104,7 @@ select.doc-finput option{background:var(--steel-mid);}
 .wo-doc-cell-detail{font-size:11px;color:#475569;margin-top:2px;line-height:1.5;}
 .wo-doc-section{margin-bottom:14px;}
 .wo-doc-section-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #e2e8f0;}
-.wo-doc-scope{background:#fffbeb;border-left:3px solid #f59e0b;padding:10px 14px;font-size:11px;color:#475569;line-height:1.6;border-radius:0 6px 6px 0;white-space:pre-wrap;}
+.wo-doc-scope{background:#fffbeb;border-left:3px solid #082850;padding:10px 14px;font-size:11px;color:#475569;line-height:1.6;border-radius:0 6px 6px 0;white-space:pre-wrap;}
 .wo-doc-cklist{display:flex;flex-direction:column;gap:5px;}
 .wo-doc-cl-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border:1px solid #e2e8f0;border-radius:5px;background:#fff;}
 .wo-doc-cl-box{width:14px;height:14px;border:1.5px solid #1a1e2e;border-radius:3px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#1a1e2e;}
@@ -1131,11 +1143,11 @@ select.doc-finput option{background:var(--steel-mid);}
 
 /* Material Order — printed/preview side */
 .mo-doc{background:#fff;color:#1a1e2e;border-radius:6px;padding:24px 28px;font-family:'DM Sans',sans-serif;max-width:760px;margin:0 auto;box-shadow:0 2px 8px rgba(0,0,0,.08);}
-.mo-doc-head{text-align:center;border-bottom:3px solid #f59e0b;padding-bottom:12px;margin-bottom:14px;}
+.mo-doc-head{text-align:center;border-bottom:3px solid #082850;padding-bottom:12px;margin-bottom:14px;}
 .mo-doc-co{font-size:20px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#1a1e2e;}
 .mo-doc-co-sub{font-size:9px;color:#64748b;letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;}
 .mo-doc-co-meta{font-size:10px;color:#64748b;margin-top:4px;}
-.mo-doc-title{font-size:14px;font-weight:800;letter-spacing:3px;color:#f59e0b;text-transform:uppercase;margin-top:6px;}
+.mo-doc-title{font-size:14px;font-weight:800;letter-spacing:3px;color:#082850;text-transform:uppercase;margin-top:6px;}
 .mo-doc-info{font-size:11px;color:#475569;margin-bottom:12px;line-height:1.7;}
 .mo-doc-info strong{color:#1a1e2e;}
 .mo-doc-info-row{display:flex;flex-wrap:wrap;gap:10px 18px;}
@@ -1144,8 +1156,8 @@ select.doc-finput option{background:var(--steel-mid);}
 .mo-doc-table td{border:1px solid #cbd5e1;padding:7px 9px;color:#1a1e2e;vertical-align:top;}
 .mo-doc-table td:first-child{font-weight:600;background:#f8fafc;width:36%;}
 .mo-doc-table td.empty{color:#cbd5e1;}
-.mo-doc-shingle{background:#fffbeb;border:1px solid #f59e0b;border-radius:6px;padding:8px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:#1a1e2e;}
-.mo-doc-shingle strong{color:#f59e0b;font-weight:700;}
+.mo-doc-shingle{background:#fffbeb;border:1px solid #082850;border-radius:6px;padding:8px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:#1a1e2e;}
+.mo-doc-shingle strong{color:#082850;font-weight:700;}
 .mo-doc-final-notes{background:#f1f5f9;border-left:3px solid #1a1e2e;padding:8px 12px;font-size:11px;color:#475569;line-height:1.6;white-space:pre-wrap;border-radius:0 6px 6px 0;margin-bottom:12px;}
 .mo-doc-final-notes-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;margin-bottom:3px;}
 .tmpl-panel{background:var(--steel-mid);border-radius:14px;border:2px solid var(--amber);width:min(520px,96vw);max-height:84vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -6168,7 +6180,7 @@ function openCustomerMov(){
             <input id="ncEmail" class="finput" placeholder="name@example.com"/>
           </div>
         </div>
-        <div id="ncPhoneMatch" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:10px;font-size:12px;color:var(--amber)"></div>
+        <div id="ncPhoneMatch" style="display:none;background:rgba(16,168,176,.1);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:10px;font-size:12px;color:var(--amber)"></div>
         <div>
           <label class="flbl">Address (street)</label>
           <input id="ncAddr" class="finput" placeholder="123 Main St, Milwaukee, WI"/>
@@ -10761,7 +10773,7 @@ function matlistPrintPdf(){
     .head{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:14px;border-bottom:3px solid #f59e0b;margin-bottom:18px;}
     .co-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#1a1e2e;}
     .co-tag{font-size:10px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
-    .doc-type{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#f59e0b;text-align:right;}
+    .doc-type{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#082850;text-align:right;}
     .doc-date{font-size:11px;color:#64748b;text-align:right;}
     table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;}
     th{background:#f1f5f9;padding:6px 8px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;}
