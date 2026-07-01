@@ -1317,7 +1317,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div id="authSignUpForm" style="display:none">
       <div class="auth-title" style="margin-bottom:6px">CREATE ACCOUNT</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <input class="auth-input" id="suName" type="text" placeholder="Full name" autocomplete="name" onkeydown="if(event.key==='Enter')document.getElementById('suEmail').focus()">
+        <input class="auth-input" id="suName" type="text" placeholder="Full name" autocomplete="name" onkeydown="if(event.key==='Enter')document.getElementById('suCompany').focus()">
+        <input class="auth-input" id="suCompany" type="text" placeholder="Company name" autocomplete="organization" onkeydown="if(event.key==='Enter')document.getElementById('suEmail').focus()">
         <input class="auth-input" id="suEmail" type="email" placeholder="Email address" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('suPassword').focus()">
         <input class="auth-input" id="suPassword" type="password" placeholder="Password (min 8 chars)" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignUp()">
         <button class="auth-btn" id="suBtnSubmit" onclick="doSignUp()">CREATE ACCOUNT</button>
@@ -3873,6 +3874,14 @@ async function doSignIn(){
     if(!r.ok)throw new Error(data.error_description||data.msg||'Sign in failed');
     saveAuthSession(data);
     scheduleTokenRefresh();
+    // Phase 2: if this user signed up via the email-confirmation path, their
+    // company wasn't created yet (no session at signup time). Provision it now,
+    // on their first confirmed sign-in, before loading the app.
+    let pendingCompany=null;
+    try{pendingCompany=localStorage.getItem('pendingCompanyName');}catch{}
+    if(pendingCompany){
+      await provisionCompany(pendingCompany,null);
+    }
     hideAuthScreen();
     updateUserUI();
     document.getElementById('loading').classList.remove('hidden');
@@ -3884,12 +3893,13 @@ async function doSignIn(){
 }
 async function doSignUp(){
   const name=document.getElementById('suName').value.trim();
+  const company=document.getElementById('suCompany').value.trim();
   const email=document.getElementById('suEmail').value.trim();
   const password=document.getElementById('suPassword').value;
   setAuthPersist(true); // new sign-ups default to Remember Me on
   const errEl=document.getElementById('suError');
   errEl.className='auth-error err';
-  if(!name||!email||!password){errEl.textContent='All fields are required.';errEl.classList.add('show');return;}
+  if(!name||!company||!email||!password){errEl.textContent='All fields are required.';errEl.classList.add('show');return;}
   if(password.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.classList.add('show');return;}
   const btn=document.getElementById('suBtnSubmit');
   btn.textContent='CREATING…';btn.disabled=true;
@@ -3901,11 +3911,26 @@ async function doSignUp(){
     const data=await r.json();
     if(!r.ok)throw new Error(data.error_description||data.msg||'Sign up failed');
     if(data.access_token){
+      // Auth succeeded and we have a live session. Provision the company +
+      // owner profile via the security-definer function BEFORE loading the app,
+      // otherwise the user lands on the "no profile" (Access Pending) screen.
       saveAuthSession(data);scheduleTokenRefresh();
+      const ok=await provisionCompany(company,name);
+      if(!ok){
+        // Provisioning failed — surface it and stop rather than dropping the
+        // user into a half-set-up state.
+        errEl.textContent='Account created, but company setup failed. Try signing in again or contact support.';
+        errEl.classList.add('show');
+        btn.textContent='CREATE ACCOUNT';btn.disabled=false;
+        return;
+      }
       hideAuthScreen();updateUserUI();
       document.getElementById('loading').classList.remove('hidden');
       await loadAppData();
     }else{
+      // Email-confirmation flow: no session yet. Stash the company name so we
+      // can provision it right after their first confirmed sign-in.
+      try{localStorage.setItem('pendingCompanyName',company);}catch{}
       errEl.className='auth-error ok show';
       errEl.textContent='Account created! Check your email to confirm, then sign in.';
       setTimeout(()=>showAuthForm('signin'),3500);
@@ -3913,6 +3938,29 @@ async function doSignUp(){
   }catch(e){
     errEl.textContent=e.message||'Could not create account.';errEl.classList.add('show');
   }finally{btn.textContent='CREATE ACCOUNT';btn.disabled=false;}
+}
+
+// Phase 2: call the security-definer signup function to atomically create the
+// company + owner profile + trial. Returns true on success. Idempotent-safe:
+// if the user already has a company (e.g. confirmed-email path re-running),
+// 'already_has_company' is treated as success.
+async function provisionCompany(companyName,displayName){
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/signup_create_company',{
+      method:'POST',
+      headers:{
+        'apikey':SB_KEY,
+        'Authorization':'Bearer '+authAccessToken,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({p_company_name:companyName,p_display_name:displayName||null})
+    });
+    const data=await r.json();
+    if(data&&data.ok){try{localStorage.removeItem('pendingCompanyName');}catch{}return true;}
+    if(data&&data.error==='already_has_company'){try{localStorage.removeItem('pendingCompanyName');}catch{}return true;}
+    console.error('provisionCompany failed:',data);
+    return false;
+  }catch(e){console.error('provisionCompany error:',e);return false;}
 }
 async function doSignOut(){
   closeUserMenu();
