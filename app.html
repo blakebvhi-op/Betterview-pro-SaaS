@@ -4850,11 +4850,22 @@ async function loadCustomersRemote(){
 // so server doc-refresh (and signed-estimate detection) silently failed.
 // Defined here to match the sibling *Remote loaders. Maps rows with dbToDoc,
 // same as loadAllRemote does.
+// FIX: loadDocs() was called in 13 places but never defined — every call
+// (including openDocEditor, which is why "New Estimate" did nothing) threw
+// ReferenceError. Per the code's own comments, loadDocs() is intentionally a
+// lightweight stub: it sweeps the stale localStorage docs cache (removed due
+// to PWA quota issues) and does NOT load docs — loadDocsRemote() does the real
+// server load. It must never clobber in-memory unsaved docs.
+function loadDocs(){
+  try{localStorage.removeItem('docs_cache');}catch{}
+  if(!Array.isArray(docs)) docs=[];
+}
 async function loadDocsRemote(){
   try{
     const d=await sb.get('docs');
     docs=d.map(dbToDoc);
-    try{lsSet('docs_cache',docs.map(docToDb));}catch{}
+    // NOTE: intentionally do NOT cache to localStorage — the docs_cache was
+    // removed due to PWA quota issues (see loadDocs comment). Server is truth.
     return true;
   }catch(e){console.error('loadDocsRemote:',e);return false;}
 }
