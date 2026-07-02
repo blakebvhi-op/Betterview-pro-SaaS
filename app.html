@@ -2393,7 +2393,7 @@ async function pushDocToQb(){
   // Save any unsaved edits first so QB gets the current state
   saveDoc();
   const doc=docs.find(x=>x.id===editDocId);
-  if(!doc){alert('Invoice not found.');return;}
+  if(!doc){alert('Invoice not found. [pushDocToQb] editDocId='+editDocId);return;}
   // If already pushed, ask if they want to push again (creates a duplicate in QB)
   let force=false;
   if(doc.qbInvoiceId){
@@ -4861,12 +4861,42 @@ function loadDocs(){
 }
 async function loadDocsRemote(){
   try{
+    // Snapshot which estimates were already signed BEFORE the refresh, so we
+    // can detect ones that transition INTO signed and auto-advance their lead.
+    const wasSigned=new Set(docs.filter(d=>d.type==='estimate'&&d.signature).map(d=>d.id));
     const d=await sb.get('docs');
     docs=d.map(dbToDoc);
     // NOTE: intentionally do NOT cache to localStorage — the docs_cache was
     // removed due to PWA quota issues (see loadDocs comment). Server is truth.
+    try{ detectNewlySignedEstimates(wasSigned); }catch(e){ console.error('signed-detect:',e); }
     return true;
   }catch(e){console.error('loadDocsRemote:',e);return false;}
+}
+// When an estimate becomes signed, that IS acceptance — advance its lead to
+// 'accepted', which fires runStageAutomations (creates the job card + task).
+// This replaces the manual Quoting->Accepted labeling that was the headache.
+function detectNewlySignedEstimates(wasSigned){
+  const nowSigned=docs.filter(d=>d.type==='estimate'&&d.signature&&!wasSigned.has(d.id));
+  if(!nowSigned.length) return;
+  let moved=0;
+  nowSigned.forEach(doc=>{
+    const lead=leads.find(l=>l.estId===doc.id);
+    if(!lead) return;
+    // Only advance forward from pre-acceptance stages; never override a lead
+    // that's already accepted/invoiced/paid/done.
+    if(['new','contact','quote'].includes(lead.stage)){
+      const oldStage=lead.stage;
+      lead.stage='accepted';
+      if(typeof saveLead==='function') saveLead(lead);
+      if(typeof runStageAutomations==='function') runStageAutomations(lead,oldStage,'accepted');
+      moved++;
+    }
+  });
+  if(moved){
+    if(typeof updateBadges==='function') updateBadges();
+    if(mainView==='crm'&&typeof renderCRM==='function') renderCRM();
+    if(mainView==='dash'&&typeof renderDashboard==='function') renderDashboard();
+  }
 }
 async function loadCustomerAddressesRemote(){
   try{customerAddresses=await sb.get('customer_addresses');return true;}
@@ -7218,6 +7248,11 @@ function runStageAutomations(lead,oldStage,newStage){
       };
     }
   } else if(newStage==='accepted'){
+    // Auto-create the scheduled job card (Blake-approved automation).
+    // promoteLeadToJob has its own dedupe guard, so calling it is safe even
+    // if a job already exists for this lead.
+    try{ if(typeof promoteLeadToJob==='function') promoteLeadToJob(lead); }
+    catch(e){ console.error('auto job-card on accepted failed:',e); }
     // Schedule the job
     if(!taskExists('Schedule job for')){
       newTask={
@@ -8255,7 +8290,7 @@ function _promptOutcomeDate(defaultDate){
 async function markDocOutcome(outcome){
   if(!editDocId){alert('No document open.');return;}
   const d=docs.find(x=>x.id===editDocId);
-  if(!d){alert('Document not found.');return;}
+  if(!d){alert('Document not found. [markDocOutcome] editDocId='+editDocId+' docsLoaded='+docs.length);return;}
   // Won/Lost only applies to revenue-eligible doc types (estimates + contracts).
   // Change orders and lien waivers can be signed but they're not deals.
   if(!getDocTypeConfig(d.type).countsAsWon){
@@ -9016,6 +9051,7 @@ function openDocEditor(id,newType){
   editDocId=id||null;
   loadDocs();
   let doc=editDocId?docs.find(d=>d.id===editDocId):null;
+  if(id&&!doc){ alert('Estimate not found. [openDocEditor] looked for id='+id+' — docs loaded='+docs.length+(docs.length?(' sample ids: '+docs.slice(0,4).map(x=>x.id).join(', ')):' (docs array EMPTY)')); }
   if(!doc){
     // newType controls which kind of doc we create. Defaults to estimate
     // when called from legacy entry points.
