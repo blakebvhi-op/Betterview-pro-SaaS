@@ -4199,7 +4199,7 @@ const MO=['January','February','March','April','May','June','July','August','Sep
 const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 // ── STATE ────────────────────────────────────────────────────
-let jobs=[],leads=[];
+let jobs=[],leads=[],docs=[];
 // Customer entity (added in Phase 3 refactor) — leads still exist but
 // now reference customers via leads.customer_id. customers is the spine.
 let customers=[];          // {id, name, phone, phone_normalized, email, notes, source, archived_at, ...}
@@ -4850,15 +4850,12 @@ async function loadCustomersRemote(){
 // so server doc-refresh (and signed-estimate detection) silently failed.
 // Defined here to match the sibling *Remote loaders. Maps rows with dbToDoc,
 // same as loadAllRemote does.
-// FIX: loadDocs() was called in 13 places but never defined — every call
-// (including openDocEditor, which is why "New Estimate" did nothing) threw
-// ReferenceError. Per the code's own comments, loadDocs() is intentionally a
-// lightweight stub: it sweeps the stale localStorage docs cache (removed due
-// to PWA quota issues) and does NOT load docs — loadDocsRemote() does the real
-// server load. It must never clobber in-memory unsaved docs.
+// loadDocs() is intentionally a lightweight stub (see version-drift note):
+// it sweeps the stale localStorage docs cache (removed due to PWA quota
+// issues) and does NOT load docs — loadDocsRemote() does the real server
+// load. 'docs' is declared as a global array up top, so this never throws.
 function loadDocs(){
   try{localStorage.removeItem('docs_cache');}catch{}
-  if(!Array.isArray(docs)) docs=[];
 }
 async function loadDocsRemote(){
   try{
@@ -8872,13 +8869,6 @@ function calcDocTotal(d){
 }
 
 function openDocEditor(id,newType){
-  try{ return _openDocEditorImpl(id,newType); }
-  catch(err){
-    alert('New Estimate error:\n\n'+(err&&err.message?err.message:err)+'\n\n'+(err&&err.stack?String(err.stack).split('\n').slice(0,4).join('\n'):''));
-    console.error('openDocEditor failed:',err);
-  }
-}
-function _openDocEditorImpl(id,newType){
   // If this id points to a work order, route to the WO editor instead
   if(id){
     loadDocs();
