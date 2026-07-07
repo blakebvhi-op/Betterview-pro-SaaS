@@ -8703,7 +8703,7 @@ function closeMov(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.mov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 function showToast(title,msg,jump=false){ /* notifications removed */ }
 function updateBadges(){
-  const bl=jobs.filter(j=>j.day==='backlog').length,cm=leads.filter(l=>!['declined','done'].includes(l.stage)).length;
+  const bl=jobs.filter(j=>j.day==='backlog').length,cm=customers.filter(c=>!c.archived_at).length;
   const bb=document.getElementById('bnBlBadge');bb.textContent=bl;bb.classList.toggle('show',bl>0);
   const cb=document.getElementById('bnCrmBadge');cb.textContent=cm;cb.classList.toggle('show',cm>0);
   document.getElementById('dtBlBadge').textContent=bl;document.getElementById('dtCrmBadge').textContent=cm;
