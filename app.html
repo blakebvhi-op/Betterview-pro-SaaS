@@ -7541,7 +7541,7 @@ function docCustSearchInput(q){
   // collapse to one row per person. Key on customer_id when present (all of a
   // customer's leads share it), else normalized name+phone. Keep the most
   // recent lead as the representative for that person.
-  const _leadKey=l=>l.customer_id||(((l.name||'').trim().toLowerCase())+'|'+((l.phone||'').replace(/[^0-9]/g,'')));
+  const _leadKey=l=>(((l.name||'').trim().toLowerCase())+'|'+((l.phone||'').replace(/[^0-9]/g,'')));
   const _seenLead=new Map();
   leads.filter(l=>
     l.name.toLowerCase().includes(qlo)||
@@ -7636,7 +7636,7 @@ function custSearchInput(q){
   // collapse to one row per person. Key on customer_id when present (all of a
   // customer's leads share it), else normalized name+phone. Keep the most
   // recent lead as the representative for that person.
-  const _leadKey=l=>l.customer_id||(((l.name||'').trim().toLowerCase())+'|'+((l.phone||'').replace(/[^0-9]/g,'')));
+  const _leadKey=l=>(((l.name||'').trim().toLowerCase())+'|'+((l.phone||'').replace(/[^0-9]/g,'')));
   const _seenLead=new Map();
   leads.filter(l=>
     l.name.toLowerCase().includes(qlo)||
@@ -11075,26 +11075,73 @@ function exportMatList(){
 }
 
 // ── ESTIMATE ↔ LEAD SYNC ─────────────────────────────────────
+// Resolve (or create) the ONE customer an estimate's lead should attach to,
+// so multiple estimates for the same person share a customer instead of
+// spawning orphan leads. Match rule (locked with Blake): merge only when BOTH
+// name and phone match an existing customer; otherwise create a new customer.
+// The estimate has no phone field — the number lives inside clientContact —
+// so we pull the last 10 digits from it.
+function _resolveCustomerForEst(doc){
+  const nameLo=(doc.clientName||'').trim().toLowerCase();
+  if(!nameLo) return null;
+  const phoneDigits=(doc.clientContact||'').replace(/[^0-9]/g,'').slice(-10);
+  if(phoneDigits.length===10){
+    // 1. Existing CUSTOMER by name + phone (both must match).
+    const cMatch=customers.find(c=>!c.archived_at
+      && (c.name||'').trim().toLowerCase()===nameLo
+      && c.phone_normalized===phoneDigits);
+    if(cMatch) return cMatch.id;
+    // 2. Existing LEAD for the same person that already carries a customer_id —
+    //    reuse that customer rather than minting a duplicate.
+    const lMatch=leads.find(l=>l.customer_id
+      && (l.name||'').trim().toLowerCase()===nameLo
+      && (l.phone||'').replace(/[^0-9]/g,'').slice(-10)===phoneDigits);
+    if(lMatch) return lMatch.customer_id;
+  }
+  // 3. No confident match (or no phone) → create a fresh customer.
+  const customerId='cust_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
+  const newCustomer={
+    id:customerId,
+    company_id:currentCompanyId||'00000000-0000-0000-0000-000000000001',
+    name:doc.clientName||'',
+    phone:phoneDigits.length===10?phoneDigits:'',
+    phone_normalized:phoneDigits.length===10?phoneDigits:null,
+    email:null,notes:null,
+    created_by:currentUser?.id||null,
+    created_at:new Date().toISOString(),
+    updated_at:new Date().toISOString(),
+  };
+  customers.push(newCustomer);
+  try{ if(typeof sb!=='undefined'&&sb&&sb.upsert) sb.upsert('customers',newCustomer); }
+  catch(e){ console.error('est customer create:',e); }
+  return customerId;
+}
 function syncEstToLead(doc){
   // Find existing lead linked to this estimate, or match by client name
   let lead=leads.find(l=>l.estId===doc.id);
   if(!lead) lead=leads.find(l=>l.name===doc.clientName&&!l.estId);
   const total=calcDocTotal(doc);
+  const estPhone=(doc.clientContact||'').replace(/[^0-9]/g,'').slice(-10);
   if(lead){
     lead.estId=doc.id;
     lead.name=doc.clientName||lead.name;
     lead.contact=doc.clientContact||lead.contact;
+    if(!lead.phone&&estPhone.length===10) lead.phone=estPhone;
     lead.address=doc.clientAddr||lead.address;
     lead.value=total.grand.toFixed(2);
     if(lead.stage==='new') lead.stage='quote';
+    // Backfill the customer link if this lead was an orphan (stops the bleed).
+    if(!lead.customer_id){ lead.customer_id=_resolveCustomerForEst(doc); }
     saveLead(lead);
     lsSet('leads_cache',leads.map(leadToDb));
   } else if(doc.clientName){
+    const custId=_resolveCustomerForEst(doc);
     const newLead={
-      id:uid(),name:doc.clientName,contact:doc.clientContact||'',phone:'',email:'',
+      id:uid(),name:doc.clientName,contact:doc.clientContact||'',phone:estPhone.length===10?estPhone:'',email:'',
       types:[],value:total.grand.toFixed(2),stage:'quote',
       address:doc.clientAddr||'',notes:doc.scope||'',color:'blue',
       estId:doc.id,matList:[],
+      customer_id:custId||null,
     };
     leads.push(newLead);
     saveLead(newLead);
