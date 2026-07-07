@@ -7536,12 +7536,24 @@ function docCustSearchInput(q){
   const qlo=q.toLowerCase();
   const qd=q.replace(/[^0-9]/g,'');
   const phoneHit=(p)=>p&&(p.includes(q)||(qd.length>=3&&p.replace(/[^0-9]/g,'').includes(qd)));
-  const leadMatches=leads.filter(l=>
+  // Creating an estimate spawns a lead each time, so one person can have many
+  // leads. This box picks a PERSON to link, not a specific past estimate — so
+  // collapse to one row per person. Key on customer_id when present (all of a
+  // customer's leads share it), else normalized name+phone. Keep the most
+  // recent lead as the representative for that person.
+  const _leadKey=l=>l.customer_id||(((l.name||'').trim().toLowerCase())+'|'+((l.phone||'').replace(/[^0-9]/g,'')));
+  const _seenLead=new Map();
+  leads.filter(l=>
     l.name.toLowerCase().includes(qlo)||
     (l.address&&l.address.toLowerCase().includes(qlo))||
     phoneHit(l.phone)||
     (l.contact&&l.contact.toLowerCase().includes(qlo))
-  ).slice(0,8);
+  ).forEach(l=>{
+    const k=_leadKey(l);
+    const prev=_seenLead.get(k);
+    if(!prev||(l.createdAt||'')>(prev.createdAt||'')) _seenLead.set(k,l);
+  });
+  const leadMatches=[..._seenLead.values()].slice(0,8);
   const linked=new Set(leadMatches.map(l=>l.customer_id).filter(Boolean));
   const custMatches=customers.filter(c=>!c.archived_at&&!linked.has(c.id)&&(
     (c.name&&c.name.toLowerCase().includes(qlo))||
@@ -7619,12 +7631,24 @@ function custSearchInput(q){
   const qlo=q.toLowerCase();
   const qd=q.replace(/[^0-9]/g,'');
   const phoneHit=(p)=>p&&(p.includes(q)||(qd.length>=3&&p.replace(/[^0-9]/g,'').includes(qd)));
-  const leadMatches=leads.filter(l=>
+  // Creating an estimate spawns a lead each time, so one person can have many
+  // leads. This box picks a PERSON to link, not a specific past estimate — so
+  // collapse to one row per person. Key on customer_id when present (all of a
+  // customer's leads share it), else normalized name+phone. Keep the most
+  // recent lead as the representative for that person.
+  const _leadKey=l=>l.customer_id||(((l.name||'').trim().toLowerCase())+'|'+((l.phone||'').replace(/[^0-9]/g,'')));
+  const _seenLead=new Map();
+  leads.filter(l=>
     l.name.toLowerCase().includes(qlo)||
     (l.address&&l.address.toLowerCase().includes(qlo))||
     phoneHit(l.phone)||
     (l.contact&&l.contact.toLowerCase().includes(qlo))
-  ).slice(0,8);
+  ).forEach(l=>{
+    const k=_leadKey(l);
+    const prev=_seenLead.get(k);
+    if(!prev||(l.createdAt||'')>(prev.createdAt||'')) _seenLead.set(k,l);
+  });
+  const leadMatches=[..._seenLead.values()].slice(0,8);
   const linked=new Set(leadMatches.map(l=>l.customer_id).filter(Boolean));
   const custMatches=customers.filter(c=>!c.archived_at&&!linked.has(c.id)&&(
     (c.name&&c.name.toLowerCase().includes(qlo))||
