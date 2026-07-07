@@ -4790,7 +4790,7 @@ let _pendingJobLinkType=null; // 'wo' or 'mo'
 // the link, enters their PIN, and sees the job's scope/materials.
 async function copyCrewLink(){
   if(!editJobId){alert('Save the job first to get a crew link.');return;}
-  const link='https://sign.betterview.homes/job.html?id='+encodeURIComponent(editJobId);
+  const link=_siteBase()+'job.html?id='+encodeURIComponent(editJobId);
   let copied=false;
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{await navigator.clipboard.writeText(link);copied=true;}catch{}
@@ -7738,7 +7738,7 @@ function openJobQuickView(jobId){
   const timeLine=j.startTime?fmtTimeRange(j.startTime,j.endTime):'';
   // Crew link URL — same format as Copy Crew Link, with cache-bust
   const v=Math.floor(Date.now()/1000);
-  const crewUrl=`https://sign.betterview.homes/job.html?id=${encodeURIComponent(j.id)}&v=${v}`;
+  const crewUrl=`${_siteBase()}job.html?id=${encodeURIComponent(j.id)}&v=${v}`;
   // Maps URL — different per platform.
   // Mobile (iOS/Android) understand the `geo:` URI which opens whatever map app the
   // user has set as default. Desktop falls back to opening Google Maps in a new tab.
@@ -9756,17 +9756,29 @@ function printDoc(){
 // ── CUSTOMER PORTAL: standalone shareable HTML estimate ──────────
 // Generates a self-contained HTML file the customer can open in any browser.
 // Includes an Accept button that opens the customer's email client to send acceptance.
+// Customer/crew links must point at THIS deployment (the same repo that serves
+// app.html), so the viewer pages (sign/job/portal) query the SAME database that
+// holds the estimate. Derived from the current URL so it works on GitHub Pages
+// and on betterviewpro.com without hardcoding a domain. Falls back only for
+// Electron's file:// origin.
+function _siteBase(){
+  try{
+    if(location.protocol==='http:'||location.protocol==='https:'){
+      return location.origin+location.pathname.replace(/[^/]*$/,'');
+    }
+  }catch(e){}
+  return 'https://betterviewpro.com/';
+}
 function generateCustomerLink(){
   saveDoc();
   const d=docs.find(x=>x.id===editDocId);
   if(!d){alert('Save the estimate first.');return;}
   if(d.type!=='estimate'){alert('Customer signing links are for estimates only.');return;}
-  // The viewer page is hosted at sign.betterview.homes (custom domain for
-  // GitHub Pages). Customers see a branded URL instead of the raw github.io
-  // host. The old blakebvhi-op.github.io URL still resolves and redirects
-  // here, so any previously-sent links continue to work.
-  // Format: https://sign.betterview.homes/sign.html?id=<docId>
-  const link='https://sign.betterview.homes/sign.html?id='+encodeURIComponent(d.id);
+  // The viewer page (sign.html) is deployed alongside app.html in the same
+  // repo, so _siteBase() points customers at THIS deployment's sign.html —
+  // which queries the same database that holds this estimate.
+  // Format: <this-deployment>/sign.html?id=<docId>
+  const link=_siteBase()+'sign.html?id='+encodeURIComponent(d.id);
   // Try to copy to clipboard (works in Electron + modern browsers)
   const showResult=copied=>{
     const overlay=document.createElement('div');
@@ -12378,7 +12390,7 @@ function generatePortalLink(){
   if(!d){alert('Open or save an estimate first.');return;}
   const lead=leads.find(l=>l.estId===d.id);
   if(!lead){alert('No lead is linked to this estimate yet — the portal needs a lead to pull the appointment and schedule.');return;}
-  const link='https://sign.betterview.homes/portal.html?lead='+encodeURIComponent(lead.id);
+  const link=_siteBase()+'portal.html?lead='+encodeURIComponent(lead.id);
   const ov=document.createElement('div');
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML='<div style="background:#1e2530;border:2px solid #f59e0b;border-radius:14px;padding:22px 24px;max-width:520px;width:100%;color:#fff;font-family:DM Sans,sans-serif;">'
@@ -12409,7 +12421,7 @@ function textPortalLink(){
   }
   const phone=String(lead.phone||lead.contact||'').replace(/[^\d]/g,'');
   const first=(String(lead.name||'').trim().split(/\s+/)[0])||'there';
-  const link='https://sign.betterview.homes/portal.html?lead='+encodeURIComponent(jLinkedLeadId);
+  const link=_siteBase()+'portal.html?lead='+encodeURIComponent(jLinkedLeadId);
   const _co=getCompany(); const _coName=(_co&&_co.name)?_co.name:'us';
   const msg=`Hi ${first}, thanks for scheduling with ${_coName}! Here's your project portal — your appointment, estimate, schedule, and invoice all in one place: ${link}`;
   if(!phone){
