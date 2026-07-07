@@ -338,14 +338,18 @@ function wireSignaturePad(d){
     const dataUrl=canvas.toDataURL('image/png');
     const nowIso=new Date().toISOString();
     try{
-      // Use HEAD to add Prefer: return=minimal so we don't accidentally read modified row
+      // Ask PostgREST to return the updated row (return=representation) so we can
+      // verify a row ACTUALLY changed. With return=minimal, a write that matches
+      // zero rows (e.g. already-signed, blocked by RLS) still returns 2xx and the
+      // page would show a false "signed" banner. Checking the returned array
+      // length closes that hole.
       const r=await fetch(`${SB_URL}/rest/v1/docs?id=eq.${encodeURIComponent(d.id)}`,{
         method:'PATCH',
         headers:{
           apikey:SB_KEY,
           Authorization:'Bearer '+SB_KEY,
           'Content-Type':'application/json',
-          Prefer:'return=minimal'
+          Prefer:'return=representation'
         },
         body:JSON.stringify({
           signature:dataUrl,
@@ -357,6 +361,11 @@ function wireSignaturePad(d){
         })
       });
       if(!r.ok){const txt=await r.text();throw new Error('HTTP '+r.status+': '+txt);}
+      const rows=await r.json();
+      if(!Array.isArray(rows)||rows.length===0){
+        // 2xx but nothing changed — usually already signed, or an RLS row filter.
+        throw new Error('No row updated — this estimate may already be signed. Refresh the page to check.');
+      }
       // Update local view
       d.signature=dataUrl;d.signatureName=name;d.signatureDate=nowIso;
       renderEstimate(d);
